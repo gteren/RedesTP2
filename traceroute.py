@@ -16,7 +16,7 @@ def main(dst):
         a, u = sr(request_pkt, verbose=0)
         received_pkt = a[0][1]
         sended_pkt = a[0][0]
-        rtt = received_pkt.time - sended_pkt.sent_time
+        rtt = int(1000 * (received_pkt.time - sended_pkt.sent_time))
         icmp_layer = received_pkt[ICMP]
         if icmp_layer.type == ECHO_REPLY:
             break
