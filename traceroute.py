@@ -11,12 +11,15 @@ def main(dst):
     hops = []
     while True:
         request_pkt = IP(dst=dst, ttl=ttl) / ICMP(type='echo-request')
-        reply_pkt = sr1(request_pkt, verbose=0)
-        icmp_layer = reply_pkt[ICMP]
+        a, u = sr(request_pkt, verbose=0)
+        received_pkt = a[0][1]
+        sended_pkt = a[0][0]
+        rtt = received_pkt.time - sended_pkt.sent_time
+        icmp_layer = received_pkt[ICMP]
         if icmp_layer.type == ECHO_REPLY:
             break
         elif icmp_layer.type == TIME_EXCEEDED:
-            hops.append(reply_pkt[IP].src)
+            hops.append((received_pkt[IP].src, rtt))
         else:
             hops.append('Unknowkn *')
         ttl += 1
