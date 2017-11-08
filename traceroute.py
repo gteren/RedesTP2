@@ -1,4 +1,6 @@
+#!/usr/bin/env python
 # For Python, this file uses encoding: utf-8
+
 from scapy.all import *
 import sys
 
