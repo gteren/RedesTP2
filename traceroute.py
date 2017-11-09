@@ -165,19 +165,19 @@ def mostProbableRouteTo(dst):
     dest_reached = False
     ttl = 1
     hosts = []
-    while True: #asumiendo que el dst responde echo reply
+    while True:  # asumiendo que el dst responde echo reply
 
-        #SACAR ANTES DE ENTREGAR
-        sys.stdout.write('Eligiendo ruta mas probable... %s  \r' % \
-                ('TTL_'+str(ttl).zfill(2)))
-        sys.stdout.flush()
+        # #SACAR ANTES DE ENTREGAR
+        # sys.stdout.write('Eligiendo ruta mas probable... %s  \r' % \
+        #         ('TTL_'+str(ttl).zfill(2)))
+        # sys.stdout.flush()
 
         request_pkt = IP(dst=dst, ttl=ttl)/ICMP(type='echo-request')
         requests = [request_pkt for i in range(REPS_PER_TTL)]
-        answered,unans = sr(request_pkt,verbose=0,timeout=1)
+        answered, unans = sr(request_pkt, verbose=0, timeout=1)
 
         ttli_candidate_count = {}
-        for sent_pkt,received_pkt in answered:
+        for sent_pkt, received_pkt in answered:
             icmp_layer = received_pkt[ICMP]
             if icmp_layer.type == ECHO_REPLY:
                 dest_reached = True
@@ -204,14 +204,14 @@ def mostProbableRouteTo(dst):
 def main(dst):
     route = mostProbableRouteTo(dst)
     hops = []
-    print "Ruta mas probable..."
-    print route
+    # print "Ruta mas probable..."
+    # print route
     for i in range(len(route)):
 
-        # SACAR ANTES DE ENTREGAR
-        sys.stdout.write('Iteraciones de ttl: %s\%s  \r' %
-                        (str(i+1).zfill(2), str(len(route)).zfill(2)))
-        sys.stdout.flush()
+        # # SACAR ANTES DE ENTREGAR
+        # sys.stdout.write('Iteraciones de ttl: %s\%s  \r' %
+        #                 (str(i+1).zfill(2), str(len(route)).zfill(2)))
+        # sys.stdout.flush()
 
         host = route[i]
         ttl = i+1
