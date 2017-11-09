@@ -86,11 +86,11 @@ def detectOutliers(sample):
 
 
 def detectOutliersAux(outlier_indexes, n, sample, sample_tuples):
-    print "entrando a aux con parametros"
-    print outlier_indexes
-    print n
-    print sample
-    print sample_tuples
+    # print "entrando a aux con parametros"
+    # print outlier_indexes
+    # print n
+    # print sample
+    # print sample_tuples
     if n == 2:
         return
     if n > 43:
