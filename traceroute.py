@@ -11,7 +11,7 @@ import numpy as np
 ECHO_REPLY = 0
 TIME_EXCEEDED = 11
 REPS_PER_TTL = 30
-ITERS_FOR_ROUTE = 30
+ITERS_FOR_ROUTE = 60
 UNKNOWN_HOST = 'Unknown_host'
 
 tau_values = {
@@ -111,18 +111,16 @@ def detectIntercontinentalHops(hops):
 
 def detectOutliers(sample):
     n = len(sample)
-    outlier_indexes = []
     sample_tuples = [(i, sample[i]) for i in range(n)
                      if sample[i] != UNKNOWN_HOST]
     n = len(sample_tuples)
     sample_tuples.sort(key=lambda tup: tup[1])
     sample = [sample_i for i, sample_i in sample_tuples]
 
-    detectOutliersAux(outlier_indexes, n, sample, sample_tuples)
-    return outlier_indexes
+    return detectOutliersAux(n, sample, sample_tuples)
 
 
-def detectOutliersAux(outlier_indexes, n, sample, sample_tuples):
+def detectOutliersAux(n, sample, sample_tuples):
     '''
     print "entrando a aux con parametros"
     print outlier_indexes
@@ -131,7 +129,7 @@ def detectOutliersAux(outlier_indexes, n, sample, sample_tuples):
     print sample_tuples
     '''
     if n == 2:
-        return
+        return []
     if n > 43:
         print "Tau value missing for n: "+str(n)
 
@@ -139,7 +137,7 @@ def detectOutliersAux(outlier_indexes, n, sample, sample_tuples):
     sd = np.std(sample)
 
     d_1 = abs(sample_tuples[0][1]-mean)
-    d_n = abs(sample_tuples[n-1][1]-mean)
+    d_n = abs(sample_tuples[-1][1]-mean)
     outlier_candidate = d_1
     index_in_tuples = 0
     if d_n > d_1:
@@ -148,14 +146,21 @@ def detectOutliersAux(outlier_indexes, n, sample, sample_tuples):
 
     if outlier_candidate > tau_values[n]*sd:
         original_index = sample_tuples[index_in_tuples][0]
-        outlier_indexes.append(original_index)
         sample_tuples.pop(index_in_tuples)
         sample.pop(index_in_tuples)
 
-        detectOutliersAux(outlier_indexes, n-1, sample, sample_tuples)
+        # Para mí (Enzo) hay que hacer esto
+        # Sacarlos de la muestra, porque son outliers.
+        # Pero no ponerlos como saltos internacionales
+        if outlier_candidate == d_1:
+            res = []
+        else:
+            res = [original_index]
+
+        return res + detectOutliersAux(n-1, sample, sample_tuples)
 
     else:
-        return
+        return []
 
 
 def mostProbableRouteTo(dst):
