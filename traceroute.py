@@ -37,7 +37,7 @@ tau_values = {
     }
 
 # "Route = [Hop]"
-Hop = namedtuple('Hop', ['rtt','ip_address','international','hop_num'])
+Hop = namedtuple('Hop', ['rtt', 'ip_address', 'intercontinental', 'hop_num'])
 # HopCandidateInfo = namedtuple('HopCandidate', ['count','rtt_i_mean'])
 
 
@@ -256,7 +256,7 @@ if __name__ == '__main__':
             OrderedDict([
                 ('rtt', hop.rtt),
                 ('ip_address', hop.ip_address),
-                ('salto_intercontinental', hop.international),
+                ('salto_intercontinental', hop.intercontinental),
                 ('hop_num', hop.hop_num)
             ]),
             indent=4,
