@@ -9,7 +9,8 @@ from math import sqrt
 ECHO_REPLY = 0
 TIME_EXCEEDED = 11
 REPS_PER_TTL= 30
-UNKNOWN = 'Unknown*'
+ITERS_FOR_ROUTE = 30
+UNKNOWN_HOST = 'Unknown_host'
 
 tau_values = {
     3:1.1511, 21:1.8891,
@@ -36,7 +37,25 @@ tau_values = {
 
 #"Route = [Hop]"
 Hop = namedtuple('Hop', ['rtt','ip_address','international','hop_num'])
-HopCandidateInfo = namedtuple('HopCandidate', ['count','rtt_i_mean'])
+#HopCandidateInfo = namedtuple('HopCandidate', ['count','rtt_i_mean'])
+
+def meanOf(sample):
+    return sum(map(float, sample)) / len(sample)
+
+def validType(icmp_layer):
+    if icmp_layer.type == ECHO_REPLY:
+        return True   
+    elif icmp_layer.type == TIME_EXCEEDED:
+        return True
+    else: 
+        return False   
+
+def unknownHost(hop):
+    return hop.rtt == UNKNOWN_HOST
+
+def unknownHop(ttl):
+    unk = UNKNOWN_HOST
+    return Hop(unk,unk,unk,ttl)
 
 def updateCandidate(new_rtt, candidate, candidates):
     old_count = hop_candidates[candidate].count
@@ -52,15 +71,30 @@ def noCandidates(candidates):
 #Pre: Not empty
 def bestCandidate(candidates):
     best = candidates.keys()[0]    
-    for cand, cand_info in candidates.items():
-        if cand_info.count > candidates[best].count:
-            best = candidate
-    
+    for candidate, count in candidates.items():
+        if count > candidates[best]:
+            best = candidate    
     return best
 
+def getRelativeRTTS(hops):
+    relative_rtts = []
+    for hop in hops:
+        if unknownHost(hop):
+            relative_rtts.append(UNKNOWN_HOST)
+        else:
+            if hop.hop_num == 1:
+                relative_rtts.append(hop.rtt)
+            else:
+                previous_index = hop.hop_num-2
+                i = previous_index
+                while unknownHost(hops[i]) and i>0 : i-=1
+                rel_rtt = max(0.0, hop.rtt-hops[i].rtt)
+                relative_rtts.append(rel_rtt)
+    return relative_rtts
+
 def detectIntercontinentalHops(hops):
-    rtts = [hop.rtt for hop in hops]
-    for index in detectOutliers(rtts):
+    relative_rtts = getRelativeRTTS(hops)
+    for index in detectOutliers(relative_rtts):
         rtt_i = hops[index].rtt
         ip = hops[index].ip_address
         intercontinental = True
@@ -70,7 +104,7 @@ def detectIntercontinentalHops(hops):
 def detectOutliers(sample):
     n = len(sample)
     outlier_indexes = []
-    sample_tuples = [(i, sample[i]) for i in range(n) if sample[i]!= UNKNOWN]
+    sample_tuples = [(i, sample[i]) for i in range(n) if sample[i]!=UNKNOWN_HOST]
     n = len(sample_tuples)
     sample_tuples.sort(key=lambda tup: tup[1])
     sample = [sample_i for i,sample_i in sample_tuples]
@@ -80,17 +114,19 @@ def detectOutliers(sample):
 
 
 def detectOutliersAux(outlier_indexes, n, sample, sample_tuples):
+    '''
     print "entrando a aux con parametros"
     print outlier_indexes
     print n
     print sample 
     print sample_tuples
+    '''
     if n == 2 :
         return 
     if n > 43 :
         print "Tau value missing for n: "+str(n)
 
-    mean = sum(map(float, sample)) / n
+    mean = meanOf(sample)
     sd = math.sqrt(
         sum([ (xi - mean)**2 for xi in sample ])/n
         )
@@ -113,14 +149,14 @@ def detectOutliersAux(outlier_indexes, n, sample, sample_tuples):
     else:
         return 
 
-def main(dst):
+def mostProbableRouteTo(dst):
     dest_reached = False
     ttl = 1
-    hops = []
+    hosts = []
     while True: #asumiendo que el dst responde echo reply
 
         #SACAR ANTES DE ENTREGAR
-        sys.stdout.write('Trabajando... %s  \r' % \
+        sys.stdout.write('Eligiendo ruta mas probable... %s  \r' % \
                 ('TTL_'+str(ttl).zfill(2)))
         sys.stdout.flush()
 
@@ -128,36 +164,68 @@ def main(dst):
         requests = [request_pkt for i in range(REPS_PER_TTL)]
         answered,unans = sr(request_pkt,verbose=0,timeout=1)
         
-        hop_candidates = {}
+        ttli_candidate_count = {}
         for sent_pkt,received_pkt in answered:
             icmp_layer = received_pkt[ICMP]
             if icmp_layer.type == ECHO_REPLY:
                 dest_reached = True
-                break
-            elif icmp_layer.type == TIME_EXCEEDED:            
+            if validType(icmp_layer): 
                 candidate = received_pkt[IP].src 
-                this_rtt = received_pkt.time - sent_pkt.sent_time
-
-                if candidate in hop_candidates:
-                    updateCandidate(this_rtt,candidate,hop_candidates)
+                if candidate in ttli_candidate_count:
+                    ttli_candidate_count[candidate] += 1 
                 else:
-                    hop_candidates[candidate] = HopCandidateInfo(1,this_rtt)
+                    ttli_candidate_count[candidate] = 1
+
+        if noCandidates(ttli_candidate_count):
+            unk = UNKNOWN_HOST
+            hosts.append(unk)
+        else:
+            hosts.append(bestCandidate(ttli_candidate_count))
 
         if dest_reached:
-            break 
-        elif noCandidates(hop_candidates):
-            unk = UNKNOWN
-            hops.append(Hop(unk,unk,unk,ttl))
-        else:
-            ip = bestCandidate(hop_candidates)
-            rtt_i = hop_candidates[ip].rtt_i_mean
-            intercontinental = False
-            num = ttl
-            hops.append(Hop(rtt_i,ip,intercontinental,num))
+            break
 
         ttl += 1
+    return hosts
 
-    #podria ser vacio? si salto a mi router? para mi si hay qe poner el ultimo host
+def main(dst):
+    route = mostProbableRouteTo(dst)
+    hops = []
+    print "Ruta mas probable..."
+    print route
+    for i in range(len(route)): 
+ 
+        #SACAR ANTES DE ENTREGAR            
+        sys.stdout.write('Iteraciones de ttl: %s\%s  \r' % \
+                (str(i+1).zfill(2), str(len(route)).zfill(2)))
+        sys.stdout.flush()
+
+        host = route[i]
+        ttl = i+1
+        if host == UNKNOWN_HOST:
+            hops.append(unknownHop(ttl))
+            
+        else: 
+            request_pkt = IP(dst=host)/ICMP(type='echo-request')
+            requests = [request_pkt for i in range(ITERS_FOR_ROUTE)]
+            answered,unans = sr(request_pkt,verbose=0,timeout=1)
+            rtts = []
+            if len(answered)==0:
+                hops.append(unknownHop(ttl))
+            else:   
+                for sent_pkt,received_pkt in answered:                   
+                    host_i = received_pkt[IP].src 
+                    assert(host_i==host)
+                    rtt = received_pkt.time - sent_pkt.sent_time
+                    rtts.append(rtt)
+            
+                ip = host
+                assert(len(rtts)>0)
+                rtt_i = meanOf(rtts)*1000
+                intercontinental = False
+                num = ttl
+                hops.append(Hop(rtt_i,ip,intercontinental,num))
+
     detectIntercontinentalHops(hops)
 
     return hops
