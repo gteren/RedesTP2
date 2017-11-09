@@ -6,6 +6,7 @@ from collections import namedtuple, OrderedDict
 import sys
 from math import sqrt
 import json
+import numpy as np
 
 ECHO_REPLY = 0
 TIME_EXCEEDED = 11
@@ -39,10 +40,6 @@ tau_values = {
 # "Route = [Hop]"
 Hop = namedtuple('Hop', ['rtt', 'ip_address', 'intercontinental', 'hop_num'])
 # HopCandidateInfo = namedtuple('HopCandidate', ['count','rtt_i_mean'])
-
-
-def meanOf(sample):
-    return sum(map(float, sample)) / len(sample)
 
 
 def validType(icmp_layer):
@@ -93,11 +90,11 @@ def getRelativeRTTS(hops):
             if hop.hop_num == 1:
                 relative_rtts.append(hop.rtt)
             else:
-                previous_index = hop.hop_num-2
-                i = previous_index
-                while unknownHost(hops[i]) and i > 0:
-                    i -= 1
-                rel_rtt = max(0.0, hop.rtt-hops[i].rtt)
+                previous_rtt = next(h.rtt for h in
+                                    reversed(hops[:hop.hop_num-1])
+                                    if not unknownHost(h)
+                                    )
+                rel_rtt = max(0.0, hop.rtt-previous_rtt)
                 relative_rtts.append(rel_rtt)
     return relative_rtts
 
@@ -115,7 +112,8 @@ def detectIntercontinentalHops(hops):
 def detectOutliers(sample):
     n = len(sample)
     outlier_indexes = []
-    sample_tuples = [(i, sample[i]) for i in range(n) if sample[i] != UNKNOWN_HOST]
+    sample_tuples = [(i, sample[i]) for i in range(n)
+                     if sample[i] != UNKNOWN_HOST]
     n = len(sample_tuples)
     sample_tuples.sort(key=lambda tup: tup[1])
     sample = [sample_i for i, sample_i in sample_tuples]
@@ -137,10 +135,9 @@ def detectOutliersAux(outlier_indexes, n, sample, sample_tuples):
     if n > 43:
         print "Tau value missing for n: "+str(n)
 
-    mean = meanOf(sample)
-    sd = math.sqrt(
-        sum([(xi - mean)**2 for xi in sample])/n
-        )
+    mean = np.mean(sample)
+    sd = np.std(sample)
+
     d_1 = abs(sample_tuples[0][1]-mean)
     d_n = abs(sample_tuples[n-1][1]-mean)
     outlier_candidate = d_1
@@ -204,37 +201,27 @@ def mostProbableRouteTo(dst):
 def main(dst):
     route = mostProbableRouteTo(dst)
     hops = []
-    # print "Ruta mas probable..."
-    # print route
+
     for i in range(len(route)):
-
-        # # SACAR ANTES DE ENTREGAR
-        # sys.stdout.write('Iteraciones de ttl: %s\%s  \r' %
-        #                 (str(i+1).zfill(2), str(len(route)).zfill(2)))
-        # sys.stdout.flush()
-
         host = route[i]
         ttl = i+1
         if host == UNKNOWN_HOST:
             hops.append(unknownHop(ttl))
-
         else:
-            request_pkt = IP(dst=host)/ICMP(type='echo-request')
-            requests = [request_pkt for i in range(ITERS_FOR_ROUTE)]
-            answered, unans = sr(request_pkt, verbose=0, timeout=1)
+            requests = [IP(dst=host)/ICMP(type='echo-request')
+                        for i in range(ITERS_FOR_ROUTE)]
+            answered, unans = sr(requests, verbose=0, timeout=1)
             rtts = []
             if len(answered) == 0:
                 hops.append(unknownHop(ttl))
             else:
                 for sent_pkt, received_pkt in answered:
                     host_i = received_pkt[IP].src
-                    assert(host_i == host)
                     rtt = received_pkt.time - sent_pkt.sent_time
                     rtts.append(rtt)
 
                 ip = host
-                assert(len(rtts) > 0)
-                rtt_i = meanOf(rtts)*1000
+                rtt_i = np.mean(rtts)*1000
                 intercontinental = False
                 num = ttl
                 hops.append(Hop(rtt_i, ip, intercontinental, num))
