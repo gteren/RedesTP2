@@ -39,8 +39,6 @@ tau_values = {
 
 # "Route = [Hop]"
 Hop = namedtuple('Hop', ['rtt', 'ip_address', 'intercontinental', 'hop_num'])
-# HopCandidateInfo = namedtuple('HopCandidate', ['count','rtt_i_mean'])
-
 
 def validType(icmp_layer):
     if icmp_layer.type == ECHO_REPLY:
@@ -50,28 +48,15 @@ def validType(icmp_layer):
     else:
         return False
 
-
 def unknownHost(hop):
     return hop.rtt == UNKNOWN_HOST
-
 
 def unknownHop(ttl):
     unk = UNKNOWN_HOST
     return Hop(unk, unk, unk, ttl)
 
-
-def updateCandidate(new_rtt, candidate, candidates):
-    old_count = hop_candidates[candidate].count
-    old_mean = hop_candidates[candidate].rtt_i_mean
-    new_count = old_count+1
-    new_rtt_i_mean = (old_mean*old_count + new_rtt) / new_count
-    candidate_info = HopCandidateInfo(new_count, new_rtt_i_mean)
-    hop_candidates[candidate] = candidate_info
-
-
 def noCandidates(candidates):
     return len(candidates) == 0
-
 
 def bestCandidate(candidates):
     best = candidates.keys()[0]
@@ -79,7 +64,6 @@ def bestCandidate(candidates):
         if count > candidates[best]:
             best = candidate
     return best
-
 
 def getRelativeRTTS(hops):
     relative_rtts = []
@@ -90,14 +74,33 @@ def getRelativeRTTS(hops):
             if hop.hop_num == 1:
                 relative_rtts.append(hop.rtt)
             else:
-                previous_rtt = next(h.rtt for h in
-                                    reversed(hops[:hop.hop_num-1])
-                                    if not unknownHost(h)
+                unks_btw = unknownsBefore(hop.hop_num-1, hops)
+                previous_rtt = 0
+                previous_rtt2 = 0
+                try: 
+                    previous_rtt2 = next(h.rtt for h in
+                                        reversed(hops[:hop.hop_num-1])
+                                        if not unknownHost(h)
                                     )
-                rel_rtt = max(0.0, hop.rtt-previous_rtt)
+                except: StopIteration 
+                
+                previous_index = hop.hop_num-1-(unks_btw+1)
+                if previous_index >= 0:
+                    previous_rtt = hops[previous_index].rtt
+                assert(previous_rtt2 == previous_rtt)
+                rel_rtt = max(0.0, (hop.rtt-previous_rtt)/(unks_btw+1))
                 relative_rtts.append(rel_rtt)
     return relative_rtts
 
+def unknownsBefore(i, hops):
+    count = 0
+    rev = reversed(hops[:i])
+    for h in rev:
+        if unknownHost(h):
+            count+=1
+        else:
+            break
+    return count
 
 def detectIntercontinentalHops(hops):
     relative_rtts = getRelativeRTTS(hops)
@@ -108,26 +111,19 @@ def detectIntercontinentalHops(hops):
         num = hops[index].hop_num
         hops[index] = Hop(rtt_i, ip, intercontinental, num)
 
-
 def detectOutliers(sample):
     n = len(sample)
     sample_tuples = [(i, sample[i]) for i in range(n)
                      if sample[i] != UNKNOWN_HOST]
     n = len(sample_tuples)
     sample_tuples.sort(key=lambda tup: tup[1])
+    print sample_tuples
     sample = [sample_i for i, sample_i in sample_tuples]
 
     return detectOutliersAux(n, sample, sample_tuples)
 
 
 def detectOutliersAux(n, sample, sample_tuples):
-    '''
-    print "entrando a aux con parametros"
-    print outlier_indexes
-    print n
-    print sample
-    print sample_tuples
-    '''
     if n == 2:
         return []
     if n > 43:
@@ -135,11 +131,12 @@ def detectOutliersAux(n, sample, sample_tuples):
 
     mean = np.mean(sample)
     sd = np.std(sample)
-
+    
     d_1 = abs(sample_tuples[0][1]-mean)
     d_n = abs(sample_tuples[-1][1]-mean)
     outlier_candidate = d_1
     index_in_tuples = 0
+    
     if d_n > d_1:
         outlier_candidate = d_n
         index_in_tuples = n-1
@@ -148,10 +145,7 @@ def detectOutliersAux(n, sample, sample_tuples):
         original_index = sample_tuples[index_in_tuples][0]
         sample_tuples.pop(index_in_tuples)
         sample.pop(index_in_tuples)
-
-        # Para mí (Enzo) hay que hacer esto
-        # Sacarlos de la muestra, porque son outliers.
-        # Pero no ponerlos como saltos internacionales
+        
         if outlier_candidate == d_1:
             res = []
         else:
@@ -168,15 +162,13 @@ def mostProbableRouteTo(dst):
     ttl = 1
     hosts = []
     while True:  # asumiendo que el dst responde echo reply
-
         # #SACAR ANTES DE ENTREGAR
-        # sys.stdout.write('Eligiendo ruta mas probable... %s  \r' % \
-        #         ('TTL_'+str(ttl).zfill(2)))
-        # sys.stdout.flush()
-
-        request_pkt = IP(dst=dst, ttl=ttl)/ICMP(type='echo-request')
-        requests = [request_pkt for i in range(REPS_PER_TTL)]
-        answered, unans = sr(request_pkt, verbose=0, timeout=1)
+        sys.stdout.write('Eligiendo ruta mas probable... %s  \r' % \
+                ('TTL_'+str(ttl).zfill(2)))
+        sys.stdout.flush()
+        requests = [IP(dst=dst, ttl=ttl)/ICMP(type='echo-request')
+                        for i in range(REPS_PER_TTL)]
+        answered, unans = sr(requests, verbose=0, timeout=1)
 
         ttli_candidate_count = {}
         for sent_pkt, received_pkt in answered:
@@ -226,7 +218,7 @@ def main(dst):
                     rtts.append(rtt)
 
                 ip = host
-                rtt_i = np.mean(rtts)*1000
+                rtt_i = np.median(rtts)
                 intercontinental = False
                 num = ttl
                 hops.append(Hop(rtt_i, ip, intercontinental, num))
@@ -246,10 +238,10 @@ if __name__ == '__main__':
     for hop in hops:
         json_host = json.dumps(
             OrderedDict([
-                ('rtt', hop.rtt),
-                ('ip_address', hop.ip_address),
-                ('salto_intercontinental', hop.intercontinental),
-                ('hop_num', hop.hop_num)
+                ('rtt', None if unknownHost(hop) else hop.rtt*1000 ),
+                ('ip_address', None if unknownHost(hop) else hop.ip_address),
+                ('salto_intercontinental', None if unknownHost(hop) else hop.intercontinental),
+                ('hop_num', None if unknownHost(hop) else hop.hop_num)
             ]),
             indent=4,
             separators=(',', ': ')
