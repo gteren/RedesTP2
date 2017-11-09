@@ -11,7 +11,7 @@ import numpy as np
 ECHO_REPLY = 0
 TIME_EXCEEDED = 11
 REPS_PER_TTL = 30
-ITERS_FOR_ROUTE = 60
+ITERS_FOR_ROUTE = 30
 UNKNOWN_HOST = 'Unknown_host'
 
 tau_values = {
