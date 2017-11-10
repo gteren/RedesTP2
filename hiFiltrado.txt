@@ -1,0 +1,143 @@
+[
+    {
+        "rtt": 11.600852012634277,
+        "ip_address": "192.168.0.1",
+        "salto_intercontinental": false,
+        "hop_num": 1
+    },
+    {
+        "rtt": null,
+        "ip_address": null,
+        "salto_intercontinental": null,
+        "hop_num": null
+    },
+    {
+        "rtt": null,
+        "ip_address": null,
+        "salto_intercontinental": null,
+        "hop_num": null
+    },
+    {
+        "rtt": null,
+        "ip_address": null,
+        "salto_intercontinental": null,
+        "hop_num": null
+    },
+    {
+        "rtt": null,
+        "ip_address": null,
+        "salto_intercontinental": null,
+        "hop_num": null
+    },
+    {
+        "rtt": null,
+        "ip_address": null,
+        "salto_intercontinental": null,
+        "hop_num": null
+    },
+    {
+        "rtt": null,
+        "ip_address": null,
+        "salto_intercontinental": null,
+        "hop_num": null
+    },
+    {
+        "rtt": 138.20445537567139,
+        "ip_address": "190.216.88.33",
+        "salto_intercontinental": true,
+        "hop_num": 8
+    },
+    {
+        "rtt": 145.14410495758057,
+        "ip_address": "67.17.99.233",
+        "salto_intercontinental": false,
+        "hop_num": 9
+    },
+    {
+        "rtt": null,
+        "ip_address": null,
+        "salto_intercontinental": null,
+        "hop_num": null
+    },
+    {
+        "rtt": null,
+        "ip_address": null,
+        "salto_intercontinental": null,
+        "hop_num": null
+    },
+    {
+        "rtt": 155.13098239898682,
+        "ip_address": "213.248.84.80",
+        "salto_intercontinental": false,
+        "hop_num": 12
+    },
+    {
+        "rtt": 184.01598930358887,
+        "ip_address": "62.115.119.230",
+        "salto_intercontinental": false,
+        "hop_num": 13
+    },
+    {
+        "rtt": 170.47643661499023,
+        "ip_address": "80.91.248.157",
+        "salto_intercontinental": true,
+        "hop_num": 14
+    },
+    {
+        "rtt": 259.60350036621094,
+        "ip_address": "213.248.85.174",
+        "salto_intercontinental": true,
+        "hop_num": 15
+    },
+    {
+        "rtt": 368.87204647064209,
+        "ip_address": "109.105.97.142",
+        "salto_intercontinental": false,
+        "hop_num": 16
+    },
+    {
+        "rtt": 261.16359233856201,
+        "ip_address": "109.105.97.138",
+        "salto_intercontinental": false,
+        "hop_num": 17
+    },
+    {
+        "rtt": 272.83143997192383,
+        "ip_address": "109.105.97.125",
+        "salto_intercontinental": false,
+        "hop_num": 18
+    },
+    {
+        "rtt": 308.58314037322998,
+        "ip_address": "109.105.97.42",
+        "salto_intercontinental": false,
+        "hop_num": 19
+    },
+    {
+        "rtt": 281.57699108123779,
+        "ip_address": "109.105.102.2",
+        "salto_intercontinental": false,
+        "hop_num": 20
+    },
+    {
+        "rtt": 328.02295684814453,
+        "ip_address": "130.208.17.106",
+        "salto_intercontinental": false,
+        "hop_num": 21
+    },
+    {
+        "rtt": 320.95098495483398,
+        "ip_address": "130.208.18.174",
+        "salto_intercontinental": false,
+        "hop_num": 22
+    },
+    {
+        "rtt": 306.11193180084229,
+        "ip_address": "130.208.165.194",
+        "salto_intercontinental": true,
+        "hop_num": 23
+    }
+]
+Precision (tp/tp+fp): 0.666666666667
+Recall (tp/tp+fn): 0.52380952381
+Accuaracy (tp+tn/tp+tn+fn+fp): 0.666666666667
