@@ -7,6 +7,7 @@ import sys
 from math import sqrt
 import json
 import numpy as np
+import metricas as metric
 
 ECHO_REPLY = 0
 TIME_EXCEEDED = 11
@@ -14,6 +15,8 @@ REPS_PER_TTL = 30
 ITERS_FOR_ROUTE = 30
 UNKNOWN_HOST = 'Unknown_host'
 INFINITO = 100000
+
+MODELO = 'NUEVO'
 
 tau_values = {
     3: 1.1511, 21: 1.8891,
@@ -136,12 +139,16 @@ def keepICMPDelayers(hops):
             oldIndex[len(filtered)-1] = i
     return filtered, oldIndex
 
-def detectIntercontinentalHops(hops):   
-    filteredHops, oldIndex = removeICMPDelayers(hops)
-    relative_rtts = getRelativeRTTS(filteredHops)
-    outlierIndexes = detectOutliers(relative_rtts)
-    intercontinentalHops = [oldIndex[i] for i in outlierIndexes]
-    
+def detectIntercontinentalHops(hops): 
+    if MODELO == 'NUEVO':  
+        filteredHops, oldIndex = removeICMPDelayers(hops)
+        relative_rtts = getRelativeRTTS(filteredHops)
+        outlierIndexes = detectOutliers(relative_rtts)
+        intercontinentalHops = [oldIndex[i] for i in outlierIndexes]
+    else:
+        relative_rtts = getRelativeRTTS(hops)
+        intercontinentalHops = detectOutliers(relative_rtts)
+
     for index in intercontinentalHops:
         rtt_i = hops[index].rtt
         ip = hops[index].ip_address
@@ -293,5 +300,8 @@ if __name__ == '__main__':
         if hop != hops[-1]:
             json_host += ','
         print indent(json_host)
-
     print ']'
+
+    #metric.printMetrics(hops)
+    
+
