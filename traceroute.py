@@ -13,6 +13,7 @@ TIME_EXCEEDED = 11
 REPS_PER_TTL = 30
 ITERS_FOR_ROUTE = 30
 UNKNOWN_HOST = 'Unknown_host'
+INFINITO = 100000
 
 tau_values = {
     3: 1.1511, 21: 1.8891,
@@ -89,7 +90,17 @@ def unknownsBefore(i, hops):
             break
     return count
 
-def previousRTT(i,hops):
+def unknownsAfter(i, hops):
+    count = 0
+    afterItems = hops[i+1:len(hops)]
+    for h in afterItems:
+        if unknownHost(h):
+            count+=1
+        else:
+            break
+    return count
+
+def previousRTT(i, hops):
     unks_btw = unknownsBefore(i, hops)
     previous_rtt = 0
     previous_index = i-(unks_btw+1)
@@ -97,10 +108,26 @@ def previousRTT(i,hops):
         previous_rtt = hops[previous_index].rtt
     return previous_rtt
 
+def nextRTT(i, hops):
+    unks_aft = unknownsAfter(i, hops)
+    next_rtt = INFINITO
+    next_index = i+unks_aft+1
+    if next_index < len(hops):
+        next_rtt = hops[next_index].rtt
+    return next_rtt
 #Sacamos los que tardan más que sus sucesores bajo la hipotesis
 #de que no priorizan ICMP, pero si datos reales. 
 
 def removeICMPDelayers(hops):
+    filtered = [hops[0]]
+    oldIndex = {}
+    for i in range(1, len(hops)):
+        if unknownHost(hops[i]) or hops[i].rtt < nextRTT(i,hops):
+            filtered.append(hops[i])
+            oldIndex[len(filtered)-1] = i
+    return filtered, oldIndex
+
+def keepICMPDelayers(hops):
     filtered = [hops[0]]
     oldIndex = {}
     for i in range(1, len(hops)):
