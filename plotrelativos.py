@@ -42,19 +42,25 @@ def main(hops):
     relative_rtts = [hops[0]['rtt']] + [hops[i+1]['rtt'] - hops[i]['rtt']
                                         for i in xrange(len(hops)-1)]
 
-    armar_barras(hops, relative_rtts)
+    # armar_barras(hops, relative_rtts)
     # no tengo ni idea de cómo hacer esto...
-    # armar_boxplot(hops, relative_rtts)
+    armar_boxplot(hops, relative_rtts)
 
 
 def armar_boxplot(hops, relative_rtts):
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(20, 10))
     ind = np.arange(len(relative_rtts))
     mean = np.mean(relative_rtts)
     std = np.std(relative_rtts)
-    ax.scatter(np.ones(len(ind)), (relative_rtts-mean)/std)
+    zrtts = (relative_rtts-mean)/std
+    ax.scatter(np.ones(len(zrtts)), zrtts, color='green', label='zrtts')
     ax.boxplot(relative_rtts)
-    ax.set_title("zrtt's contra rtt's")
+    ax.set_xticks([])
+    ax.set_ylabel('Milisegundos')
+    ax.set_title(u'Ubicación de zrtts en la distribución '
+                 'de los rtts relativos (entre saltos)')
+
+    ax.legend(fancybox=True, loc='best')
     plt.show()
 
 
