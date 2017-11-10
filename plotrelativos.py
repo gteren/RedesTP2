@@ -1,4 +1,4 @@
-#!usr/bin/env python
+#!/usr/bin/env python
 # For Python, this file uses encoding: utf-8
 
 import matplotlib.pyplot as plt
@@ -44,7 +44,7 @@ def main(hops):
 
     armar_barras(hops, relative_rtts)
     # no tengo ni idea de cómo hacer esto...
-    armar_boxplot(hops, relative_rtts)
+    # armar_boxplot(hops, relative_rtts)
 
 
 def armar_boxplot(hops, relative_rtts):
@@ -54,11 +54,12 @@ def armar_boxplot(hops, relative_rtts):
     std = np.std(relative_rtts)
     ax.scatter(np.ones(len(ind)), (relative_rtts-mean)/std)
     ax.boxplot(relative_rtts)
+    ax.set_title("zrtt's contra rtt's")
     plt.show()
 
 
 def armar_barras(hops, relative_rtts):
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(15, 10))
     ind = np.arange(len(relative_rtts))
     bar_width = 0.9
     rects = ax.bar(ind, relative_rtts, bar_width, alpha=0.95)
@@ -66,6 +67,7 @@ def armar_barras(hops, relative_rtts):
     ax.set_xticklabels(ind)
     ax.set_xlabel(u'Número de hop')
     ax.set_ylabel('Diferencia en milisegundos')
+    ax.set_title("Rtt's entre saltos")
     ax.grid(True)
 
     colors = cycle(tableau20)
@@ -82,8 +84,10 @@ def armar_barras(hops, relative_rtts):
             rect.set_color('green')
 
     bar_unknown = mpatches.Patch(color='grey', label='Host desconocido')
-    ax.legend(handles=[bar_unknown], fancybox=True)
+    ax.legend(handles=[bar_unknown], fancybox=True, loc='best')
+    ax.set_xlim([0, max(ind)+bar_width])
     plt.tight_layout()
+    plt.savefig('output_bar.pdf')
     plt.show()
 
 
