@@ -44,12 +44,15 @@ def main(hops):
 
     armar_barras(hops, relative_rtts)
     # no tengo ni idea de cómo hacer esto...
-    # armar_boxplot(hops, relative_rtts)
+    armar_boxplot(hops, relative_rtts)
 
 
 def armar_boxplot(hops, relative_rtts):
     fig, ax = plt.subplots(figsize=(10, 10))
     ind = np.arange(len(relative_rtts))
+    mean = np.mean(relative_rtts)
+    std = np.std(relative_rtts)
+    ax.scatter(np.ones(len(ind)), (relative_rtts-mean)/std)
     ax.boxplot(relative_rtts)
     plt.show()
 
