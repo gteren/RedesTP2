@@ -7,6 +7,7 @@ import json
 import sys
 from itertools import cycle
 import matplotlib.patches as mpatches
+from copy import deepcopy
 
 tableau20 = [(31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),
              (44, 160, 44), (152, 223, 138), (214, 39, 40), (255, 152, 150),
@@ -21,6 +22,7 @@ for i in range(len(tableau20)):
 
 
 def estimar_hops_desconocidos(hops):
+    hops = deepcopy(hops)
     i = 1
     while i < len(hops):
         if hops[i]['rtt'] is None:
@@ -32,13 +34,28 @@ def estimar_hops_desconocidos(hops):
             i = j+1
         else:
             i += 1
+    return hops
 
 
 def main(hops):
-    fig, ax = plt.subplots(figsize=(10, 10))
-    estimar_hops_desconocidos(hops)
+    hops = estimar_hops_desconocidos(hops)
     relative_rtts = [hops[0]['rtt']] + [hops[i+1]['rtt'] - hops[i]['rtt']
                                         for i in xrange(len(hops)-1)]
+
+    armar_barras(hops, relative_rtts)
+    # no tengo ni idea de cómo hacer esto...
+    # armar_boxplot(hops, relative_rtts)
+
+
+def armar_boxplot(hops, relative_rtts):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ind = np.arange(len(relative_rtts))
+    ax.boxplot(relative_rtts)
+    plt.show()
+
+
+def armar_barras(hops, relative_rtts):
+    fig, ax = plt.subplots(figsize=(10, 10))
     ind = np.arange(len(relative_rtts))
     bar_width = 0.9
     rects = ax.bar(ind, relative_rtts, bar_width, alpha=0.95)
