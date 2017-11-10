@@ -67,34 +67,21 @@ def bestCandidate(candidates):
 
 def getRelativeRTTS(hops):
     relative_rtts = []
-    for hop in hops:
+    for i in range(len(hops)):
+        hop = hops[i]
         if unknownHost(hop):
             relative_rtts.append(UNKNOWN_HOST)
         else:
-            if hop.hop_num == 1:
+            if i == 0:
                 relative_rtts.append(hop.rtt)
             else:
-                unks_btw = unknownsBefore(hop.hop_num-1, hops)
-                previous_rtt = 0
-                previous_rtt2 = 0
-                try: 
-                    previous_rtt2 = next(h.rtt for h in
-                                        reversed(hops[:hop.hop_num-1])
-                                        if not unknownHost(h)
-                                    )
-                except: StopIteration 
-                
-                previous_index = hop.hop_num-1-(unks_btw+1)
-                if previous_index >= 0:
-                    previous_rtt = hops[previous_index].rtt
-                assert(previous_rtt2 == previous_rtt)
-                rel_rtt = max(0.0, (hop.rtt-previous_rtt)/(unks_btw+1))
+                rel_rtt = max(0.0, hop.rtt-previousRTT(i,hops))
                 relative_rtts.append(rel_rtt)
     return relative_rtts
 
 def unknownsBefore(i, hops):
     count = 0
-    rev = reversed(hops[:i])
+    rev = list(reversed(hops[:i]))
     for h in rev:
         if unknownHost(h):
             count+=1
@@ -102,9 +89,33 @@ def unknownsBefore(i, hops):
             break
     return count
 
-def detectIntercontinentalHops(hops):
-    relative_rtts = getRelativeRTTS(hops)
-    for index in detectOutliers(relative_rtts):
+def previousRTT(i,hops):
+    unks_btw = unknownsBefore(i, hops)
+    previous_rtt = 0
+    previous_index = i-(unks_btw+1)
+    if previous_index >= 0:
+        previous_rtt = hops[previous_index].rtt
+    return previous_rtt
+
+#Sacamos los que tardan más que sus sucesores bajo la hipotesis
+#de que no priorizan ICMP, pero si datos reales. 
+
+def removeICMPDelayers(hops):
+    filtered = [hops[0]]
+    oldIndex = {}
+    for i in range(1, len(hops)):
+        if unknownHost(hops[i]) or previousRTT(len(filtered),filtered) < hops[i].rtt:
+            filtered.append(hops[i])
+            oldIndex[len(filtered)-1] = i
+    return filtered, oldIndex
+
+def detectIntercontinentalHops(hops):   
+    filteredHops, oldIndex = removeICMPDelayers(hops)
+    relative_rtts = getRelativeRTTS(filteredHops)
+    outlierIndexes = detectOutliers(relative_rtts)
+    intercontinentalHops = [oldIndex[i] for i in outlierIndexes]
+    
+    for index in intercontinentalHops:
         rtt_i = hops[index].rtt
         ip = hops[index].ip_address
         intercontinental = True
@@ -117,7 +128,7 @@ def detectOutliers(sample):
                      if sample[i] != UNKNOWN_HOST]
     n = len(sample_tuples)
     sample_tuples.sort(key=lambda tup: tup[1])
-    print sample_tuples
+   
     sample = [sample_i for i, sample_i in sample_tuples]
 
     return detectOutliersAux(n, sample, sample_tuples)
@@ -131,7 +142,6 @@ def detectOutliersAux(n, sample, sample_tuples):
 
     mean = np.mean(sample)
     sd = np.std(sample)
-    
     d_1 = abs(sample_tuples[0][1]-mean)
     d_n = abs(sample_tuples[-1][1]-mean)
     outlier_candidate = d_1
@@ -163,9 +173,12 @@ def mostProbableRouteTo(dst):
     hosts = []
     while True:  # asumiendo que el dst responde echo reply
         # #SACAR ANTES DE ENTREGAR
+        exitIfUnreachable(ttl)
+        '''
         sys.stdout.write('Eligiendo ruta mas probable... %s  \r' % \
                 ('TTL_'+str(ttl).zfill(2)))
         sys.stdout.flush()
+        '''
         requests = [IP(dst=dst, ttl=ttl)/ICMP(type='echo-request')
                         for i in range(REPS_PER_TTL)]
         answered, unans = sr(requests, verbose=0, timeout=1)
@@ -194,6 +207,10 @@ def mostProbableRouteTo(dst):
         ttl += 1
     return hosts
 
+def exitIfUnreachable(ttl):
+    if ttl >=40:
+        print 'Host unreachable'
+        sys.exit()
 
 def main(dst):
     route = mostProbableRouteTo(dst)
