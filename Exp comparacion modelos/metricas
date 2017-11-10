@@ -1,0 +1,55 @@
+Islandia Comun
+
+Precision (tp/tp+fp): 0.8
+Recall (tp/tp+fn): 0.842857142857
+Accuaracy (tp+tn/tp+tn+fn+fp): 0.8
+
+Islandia Filtrado
+
+Precision (tp/tp+fp): 0.666666666667
+Recall (tp/tp+fn): 0.52380952381
+Accuaracy (tp+tn/tp+tn+fn+fp): 0.666666666667
+
+#############################################
+
+Tokyo Comun
+
+Precision (tp/tp+fp): 0.692307692308
+Recall (tp/tp+fn): 0.804195804196
+Accuaracy (tp+tn/tp+tn+fn+fp): 0.692307692308
+
+Tokyo Filtrado
+
+Precision (tp/tp+fp): 0.846153846154
+Recall (tp/tp+fn): 0.846153846154
+Accuaracy (tp+tn/tp+tn+fn+fp): 0.846153846154
+
+#############################################
+
+Carnegie Comun
+
+Precision (tp/tp+fp): 0.777777777778
+Recall (tp/tp+fn): 0.833333333333
+Accuaracy (tp+tn/tp+tn+fn+fp): 0.777777777778
+
+Carnegie Filtrado
+
+Precision (tp/tp+fp): 0.777777777778
+Recall (tp/tp+fn): 0.777777777778
+Accuaracy (tp+tn/tp+tn+fn+fp): 0.777777777778
+
+#############################################
+
+Oxford Comun
+
+Precision (tp/tp+fp): 0.4375
+Recall (tp/tp+fn): 0.775
+Accuaracy (tp+tn/tp+tn+fn+fp): 0.4375
+
+Oxford Filtrado
+
+Precision (tp/tp+fp): 0.5
+Recall (tp/tp+fn): 0.3
+Accuaracy (tp+tn/tp+tn+fn+fp): 0.5
+
+

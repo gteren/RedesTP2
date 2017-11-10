@@ -132,6 +132,3 @@
         "hop_num": 22
     }
 ]
-Precision (tp/tp+fp): 0.692307692308
-Recall (tp/tp+fn): 0.804195804196
-Accuaracy (tp+tn/tp+tn+fn+fp): 0.692307692308
