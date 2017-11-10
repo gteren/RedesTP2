@@ -16,7 +16,7 @@ ITERS_FOR_ROUTE = 30
 UNKNOWN_HOST = 'Unknown_host'
 INFINITO = 100000
 
-MODELO = 'NUEVO'
+MODELO = 'VIEJO'
 
 tau_values = {
     3: 1.1511, 21: 1.8891,
@@ -122,9 +122,9 @@ def nextRTT(i, hops):
 #de que no priorizan ICMP, pero si datos reales. 
 
 def removeICMPDelayers(hops):
-    filtered = [hops[0]]
+    filtered = []
     oldIndex = {}
-    for i in range(1, len(hops)):
+    for i in range(0, len(hops)):
         if unknownHost(hops[i]) or hops[i].rtt < nextRTT(i,hops):
             filtered.append(hops[i])
             oldIndex[len(filtered)-1] = i
@@ -205,8 +205,8 @@ def mostProbableRouteTo(dst):
     dest_reached = False
     ttl = 1
     hosts = []
-    while True: 
-       
+    while True:  # asumiendo que el dst responde echo reply
+        # #SACAR ANTES DE ENTREGAR
         exitIfUnreachable(ttl)
         '''
         sys.stdout.write('Eligiendo ruta mas probable... %s  \r' % \
@@ -302,6 +302,7 @@ if __name__ == '__main__':
         print indent(json_host)
     print ']'
 
-    #metric.printMetrics(hops)
+    # metric.printMetrics(hops)
+    # metric.precision(hops)
     
 

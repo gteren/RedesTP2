@@ -122,13 +122,16 @@ def sameContinent(ip_1, ip_2):
         response_1 = reader.city(ip_1)
         city_1 = response_1.country.iso_code
     except Exception:
-        city_1 = 'ar'
+        #city_1 = 'ar'
+        return True
     try:
         response_2 = reader.city(ip_2)
         city_2 = response_2.country.iso_code
     except Exception:
-        city_2 = 'ar'
-
+        #city_2 = 'ar'
+        return True
+    if city_1 == None or city_2 == None:
+        return True
     continent_1 = transformations.cca_to_ctn(city_1)
     continent_2 = transformations.cca_to_ctn(city_2)
     
