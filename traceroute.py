@@ -205,8 +205,8 @@ def mostProbableRouteTo(dst):
     dest_reached = False
     ttl = 1
     hosts = []
-    while True:  # asumiendo que el dst responde echo reply
-        # #SACAR ANTES DE ENTREGAR
+    while True: 
+       
         exitIfUnreachable(ttl)
         '''
         sys.stdout.write('Eligiendo ruta mas probable... %s  \r' % \
