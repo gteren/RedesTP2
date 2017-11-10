@@ -140,7 +140,7 @@ def keepICMPDelayers(hops):
     return filtered, oldIndex
 
 def detectIntercontinentalHops(hops): 
-    if MODELO == 'NUEVO':  
+    if MODELO == 'NUEVO': 
         filteredHops, oldIndex = removeICMPDelayers(hops)
         relative_rtts = getRelativeRTTS(filteredHops)
         outlierIndexes = detectOutliers(relative_rtts)
@@ -205,8 +205,7 @@ def mostProbableRouteTo(dst):
     dest_reached = False
     ttl = 1
     hosts = []
-    while True:  # asumiendo que el dst responde echo reply
-        # #SACAR ANTES DE ENTREGAR
+    while True:  
         exitIfUnreachable(ttl)
         '''
         sys.stdout.write('Eligiendo ruta mas probable... %s  \r' % \

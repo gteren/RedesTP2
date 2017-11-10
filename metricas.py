@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 # For Python, this file uses encoding: utf-8
+
+#Dependencias:
+
+#Si quieren usar las metricas necesitan :
+# pip install incf.countryutils
+#pip install geoip2
+# extraer http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz 
+#como 'geodata' en el directorio de metricas.py
+
 from collections import namedtuple
 from traceroute import unknownHost,Hop
 from incf.countryutils import transformations
@@ -70,15 +79,15 @@ def recall(route):
     local_weighted = recallLocales * data_route.local.class_weight
     return  inter_weighted + local_weighted 
 
-def accuaracy(route):
+def accuracy(route):
     data_route = analize(route)
-    accuaracyIntercontinentales = accuaracyXClase(data_route.inter)
-    accuaracyLocales = accuaracyXClase(data_route.local)
-    inter_weighted = accuaracyIntercontinentales * data_route.inter.class_weight 
-    local_weighted = accuaracyLocales * data_route.local.class_weight
+    accuracyIntercontinentales = accuracyXClase(data_route.inter)
+    accuracyLocales = accuracyXClase(data_route.local)
+    inter_weighted = accuracyIntercontinentales * data_route.inter.class_weight 
+    local_weighted = accuracyLocales * data_route.local.class_weight
     return  inter_weighted + local_weighted 
 
-def accuaracyXClase(classData):
+def accuracyXClase(classData):
     sumOfAll = classData.tp+classData.tn+classData.fp+classData.fn
     
     if sumOfAll == 0: 
@@ -122,16 +131,18 @@ def sameContinent(ip_1, ip_2):
         response_1 = reader.city(ip_1)
         city_1 = response_1.country.iso_code
     except Exception:
-        #city_1 = 'ar'
-        return True
+        city_1 = 'ar'
+        #return True
     try:
         response_2 = reader.city(ip_2)
         city_2 = response_2.country.iso_code
     except Exception:
-        #city_2 = 'ar'
-        return True
+        city_2 = 'ar'
+        #return True
+    
     if city_1 == None or city_2 == None:
         return True
+    
     continent_1 = transformations.cca_to_ctn(city_1)
     continent_2 = transformations.cca_to_ctn(city_2)
     
@@ -140,4 +151,4 @@ def sameContinent(ip_1, ip_2):
 def printMetrics(hops):
     print 'Precision (tp/tp+fp): '+ str(precision(hops))
     print 'Recall (tp/tp+fn): '+ str(recall(hops))
-    print 'Accuaracy (tp+tn/tp+tn+fn+fp): '+ str(accuaracy(hops))
+    print 'Accuaracy (tp+tn/tp+tn+fn+fp): '+ str(accuracy(hops))
