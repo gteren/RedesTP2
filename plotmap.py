@@ -16,7 +16,7 @@ def main(hosts):
     #  for 'low', not a numeral 1
     fig, ax = plt.subplots(figsize=(12, 12))
     my_map = Basemap(projection='robin', lat_0=0, lon_0=-100,
-                     resolution='l', area_thresh=1000.0)
+                     resolution='i', area_thresh=1000.0)
 
     my_map.drawcoastlines()
     my_map.drawcountries()
@@ -43,6 +43,8 @@ def main(hosts):
         ax.annotate("", xytext=(x1, y1), xy=(x2, y2),
                     arrowprops=dict(facecolor='#EE0000'))
 
+    plt.tight_layout()
+    plt.savefig('output.pdf')
     plt.show()
 
 
