@@ -302,7 +302,7 @@ if __name__ == '__main__':
         print indent(json_host)
     print ']'
 
-    # metric.printMetrics(hops)
-    # metric.precision(hops)
+    metric.printMetrics(hops)
+    metric.precision(hops)
     
 
