@@ -16,7 +16,7 @@ ITERS_FOR_ROUTE = 30
 UNKNOWN_HOST = 'Unknown_host'
 INFINITO = 100000
 
-MODELO = 'VIEJO'
+MODELO = 'NUEVO'
 
 tau_values = {
     3: 1.1511, 21: 1.8891,
@@ -292,7 +292,7 @@ if __name__ == '__main__':
                 ('rtt', None if unknownHost(hop) else hop.rtt*1000 ),
                 ('ip_address', None if unknownHost(hop) else hop.ip_address),
                 ('salto_intercontinental', None if unknownHost(hop) else hop.intercontinental),
-                ('hop_num', None if unknownHost(hop) else hop.hop_num)
+                ('hop_num', hop.hop_num)
             ]),
             indent=4,
             separators=(',', ': ')
@@ -302,7 +302,7 @@ if __name__ == '__main__':
         print indent(json_host)
     print ']'
 
-    metric.printMetrics(hops)
-    metric.precision(hops)
+    #metric.printMetrics(hops)
+    #metric.precision(hops)
     
 
