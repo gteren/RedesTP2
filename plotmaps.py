@@ -44,13 +44,18 @@ def main(hosts):
                     arrowprops=dict(facecolor='#EE0000'))
 
     plt.tight_layout()
-    plt.savefig('output.pdf')
-    plt.show()
 
 
 if __name__ == '__main__':
-    with open(sys.argv[1]) as f:
-        lines = f.read()
-        hosts = json.loads(lines)
+    basedir = 'Exp comparacion modelos/'
+    files = ['CarnegieFiltrado.txt', 'OxfordFiltrado.txt', 'tokyoFiltrado.txt',
+             'hiFiltrado.txt']
 
-    main(hosts)
+    for file in files:
+        with open(basedir+file) as f:
+            lines = f.read()
+            hosts = json.loads(lines)
+
+            main(hosts)
+            fname, ext = file.split('.')
+            plt.savefig('maps/'+fname+'.pdf')
