@@ -30,7 +30,8 @@ def estimar_hops_desconocidos(hops):
             while hops[j]['rtt'] is None:
                 j += 1
             for k in xrange(i, j):
-                hops[k]['rtt'] = (hops[j]['rtt'] - hops[i-1]['rtt']) / (j-i)
+                delta = hops[j]['rtt'] - hops[i-1]['rtt']
+                hops[k]['rtt'] = hops[k-1]['rtt'] + delta / (j-i+1)
             i = j+1
         else:
             i += 1
@@ -43,8 +44,7 @@ def main(hops):
                                         for i in xrange(len(hops)-1)]
 
     # armar_barras(hops, relative_rtts)
-    # no tengo ni idea de cómo hacer esto...
-    return armar_boxplot(hops, relative_rtts)
+    armar_boxplot(hops, relative_rtts)
 
 
 def armar_boxplot(hops, relative_rtts):
@@ -62,7 +62,7 @@ def armar_boxplot(hops, relative_rtts):
 
     ax.legend(fancybox=True, loc='best', prop={'size': 'xx-large'})
     ax.grid(True)
-    return fig, ax
+    # return fig, ax
 
 
 def armar_barras(hops, relative_rtts):
@@ -94,12 +94,18 @@ def armar_barras(hops, relative_rtts):
     ax.legend(handles=[bar_unknown], fancybox=True, loc='best')
     ax.set_xlim([0, max(ind)+bar_width])
     plt.tight_layout()
-    plt.savefig('output_bar.pdf')
-    plt.show()
 
 
 if __name__ == '__main__':
-    with open(sys.argv[1]) as f:
-        hops = json.loads(f.read())
-    fig, ax = main(hops)
-    plt.savefig(sys.argv[1].split('.')[0]+'_box.pdf')
+    basedir = 'Exp comparacion modelos/'
+    files = ['CarnegieFiltrado.txt', 'OxfordFiltrado.txt', 'tokyoFiltrado.txt',
+             'hiFiltrado.txt']
+
+    for file in files:
+        with open(basedir+file) as f:
+            lines = f.read()
+            hosts = json.loads(lines)
+
+            main(hosts)
+            fname, ext = file.split('.')
+            plt.savefig('graficos/'+fname+'_box.pdf')
