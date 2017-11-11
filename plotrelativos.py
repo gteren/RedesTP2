@@ -44,7 +44,7 @@ def main(hops):
 
     # armar_barras(hops, relative_rtts)
     # no tengo ni idea de cómo hacer esto...
-    armar_boxplot(hops, relative_rtts)
+    return armar_boxplot(hops, relative_rtts)
 
 
 def armar_boxplot(hops, relative_rtts):
@@ -56,12 +56,13 @@ def armar_boxplot(hops, relative_rtts):
     ax.scatter(np.ones(len(zrtts)), zrtts, color='green', label='zrtts')
     ax.boxplot(relative_rtts)
     ax.set_xticks([])
-    ax.set_ylabel('Milisegundos')
+    ax.set_ylabel('Milisegundos', size='x-large')
     ax.set_title(u'Ubicación de zrtts en la distribución '
-                 'de los rtts relativos (entre saltos)')
+                 'de los rtts relativos (entre saltos)', size='xx-large')
 
-    ax.legend(fancybox=True, loc='best')
-    plt.show()
+    ax.legend(fancybox=True, loc='best', prop={'size': 'xx-large'})
+    ax.grid(True)
+    return fig, ax
 
 
 def armar_barras(hops, relative_rtts):
@@ -100,4 +101,5 @@ def armar_barras(hops, relative_rtts):
 if __name__ == '__main__':
     with open(sys.argv[1]) as f:
         hops = json.loads(f.read())
-    main(hops)
+    fig, ax = main(hops)
+    plt.savefig(sys.argv[1].split('.')[0]+'_box.pdf')
