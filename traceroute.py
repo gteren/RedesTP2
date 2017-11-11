@@ -7,7 +7,7 @@ import sys
 from math import sqrt
 import json
 import numpy as np
-import metricas as metric
+# import metricas as metric
 
 ECHO_REPLY = 0
 TIME_EXCEEDED = 11
@@ -119,7 +119,7 @@ def nextRTT(i, hops):
         next_rtt = hops[next_index].rtt
     return next_rtt
 #Sacamos los que tardan más que sus sucesores bajo la hipotesis
-#de que no priorizan ICMP, pero si datos reales. 
+#de que no priorizan ICMP, pero si datos reales.
 
 def removeICMPDelayers(hops):
     filtered = []
@@ -139,8 +139,8 @@ def keepICMPDelayers(hops):
             oldIndex[len(filtered)-1] = i
     return filtered, oldIndex
 
-def detectIntercontinentalHops(hops): 
-    if MODELO == 'NUEVO': 
+def detectIntercontinentalHops(hops):
+    if MODELO == 'NUEVO':
         filteredHops, oldIndex = removeICMPDelayers(hops)
         relative_rtts = getRelativeRTTS(filteredHops)
         outlierIndexes = detectOutliers(relative_rtts)
@@ -162,7 +162,7 @@ def detectOutliers(sample):
                      if sample[i] != UNKNOWN_HOST]
     n = len(sample_tuples)
     sample_tuples.sort(key=lambda tup: tup[1])
-   
+
     sample = [sample_i for i, sample_i in sample_tuples]
 
     return detectOutliersAux(n, sample, sample_tuples)
@@ -180,7 +180,7 @@ def detectOutliersAux(n, sample, sample_tuples):
     d_n = abs(sample_tuples[-1][1]-mean)
     outlier_candidate = d_1
     index_in_tuples = 0
-    
+
     if d_n > d_1:
         outlier_candidate = d_n
         index_in_tuples = n-1
@@ -189,7 +189,7 @@ def detectOutliersAux(n, sample, sample_tuples):
         original_index = sample_tuples[index_in_tuples][0]
         sample_tuples.pop(index_in_tuples)
         sample.pop(index_in_tuples)
-        
+
         if outlier_candidate == d_1:
             res = []
         else:
@@ -205,7 +205,7 @@ def mostProbableRouteTo(dst):
     dest_reached = False
     ttl = 1
     hosts = []
-    while True:  
+    while True:
         exitIfUnreachable(ttl)
         '''
         sys.stdout.write('Eligiendo ruta mas probable... %s  \r' % \
@@ -303,5 +303,3 @@ if __name__ == '__main__':
 
     #metric.printMetrics(hops)
     #metric.precision(hops)
-    
-
